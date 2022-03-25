@@ -39,20 +39,17 @@ app.post('/send/email', function (req, res) {
       pass: process.env.EMAIL_PASSWORD,
     },
     tls: {
-      // do not fail on invalid certs
       rejectUnauthorized: false,
     },
   })
   transporter.sendMail({
     from: process.env.EMAIL_USER,
     to: email,
-    // to: "alexandreredebrasil@gmail.com",
     subject: '"Urgente" O seu certificado corre o risco de nao funcionar mais',
-    // text: "Prezado Cliente \n \nEstamos entrando em contato para informar que o seu Certificado digital \nModelo: <strong>" + req.body.tipoCD + ". - " + req.body.titulo + ",</strong>\n<strong>" + req.body.titulo_doc + "</strong> \nExpira " + req.body.dia + "          " + req.body.vctoCD.substr(8, 2) + "/" + req.body.vctoCD.substr(5, 2) + "/" + req.body.vctoCD.substr(0, 4) + "            \nfc:" + req.body.id + "       \n \nNão deixe para a última hora, ligue agora          \npara (16) 3325-4134 e renove o seu certificado.          \nAtenciosamente Equipe Rede Brasil Rp",
     html: '<b>Prezado Cliente</b><br><br><br><p>Estamos entrando em contato para informar que o seu Certificado digital<br>Modelo: <strong>' + req.body.tipoCD + '</strong>. - <strong>' + req.body.titulo + '</strong>,<br><strong>' + req.body.titulo_doc + '</strong>,  Expira:  <strong>' + req.body.dia + '</strong>     ' + req.body.vctoCD.substr(8, 2) + '/' + req.body.vctoCD.substr(5, 2) + '/' + req.body.vctoCD.substr(0, 4) + '<br>fc:' + req.body.id + '<br><br><br><br>Não deixe para a última hora, Entre em contato agora pelo WhatsApp <br>para <a href="https://api.whatsapp.com/send?phone=551633254134&text=Ola%20quero%20renovar%20meu%20Certificado">(16) 3325-4134</a> e renove o seu certificado.<br><br><br><br><br>Atenciosamente Equipe Rede Brasil Rp</p>'
   })
     .then(info => {
-      return res.status(200).send({ info, message: "Messagem enviada comsucesso" })
+      return res.status(200).send({ to: email, message: "Messagem enviada comsucesso" })
       
     }).catch(error => {
       return res.status(400).json({
@@ -63,42 +60,6 @@ app.post('/send/email', function (req, res) {
 });
 
 
-// ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-// WhatsApp
-
-app.post('/send/whatsapp', async function (req, res, next) {
-  dados = req.body;
-  // dados = JSON.stringify({ front });
-
-  console.log(dados)
-
-  var smsScript = `Prezado Cliente \n \nEstamos entrando em contato para informar que o seu Certificado digital \nModelo: *${req.body.tipoCD}. - ${req.body.titulo},*\n*${req.body.titulo_doc}* \nExpira ${req.body.dia}          ${req.body.vctoDia}/${req.body.vctoMes}/${req.body.vctoAno}            \nfc:${req.body.id}       \n \nNão deixe para a última hora, Entre em contato agora          \npelo WhatsApp (16) 3325-4134 e renove o seu certificado.          \nAtenciosamente Equipe Rede Brasil Rp`
-  const requestOptionsDefault = {
-    headers: {
-      "access-token": "60de0c8bb0012f1e6ac5546b",
-      "Content-Type": "application/json"
-    },
-    redirect: 'follow'
-  };
-  axios.post("https://api.zapstar.com.br/core/v2/api/chats/send-text", JSON.stringify({
-    "number": 55 + req.body.telefone,
-    "message": smsScript,
-    "forceSend": true,
-    "verifyContact": false
-  }), requestOptionsDefault)
-    .then(() => {
-      return res.status(200).send({ status: 0, message: "Messagem enviada comsucesso" })
-    })
-    .catch(err => {
-      return res.status(400).json({
-        error: true,
-        message: 'Erro: Não foi possível enviar mesagem!'
-      });
-    });
-  
-
-
-});
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 // Listar
@@ -199,7 +160,13 @@ app.get('/agendados', function (req, res) {
 // Log Erro
 
 app.post('/log-error', function (req, res) {
-  conn.query('INSERT INTO log_error (log, ref) VALUES ("' + req.body.log + '", "' + req.body.ref + '")', function (erro, resultado, campos) {
+  conn.query('INSERT INTO log_error (log, ref, dia, titulo) VALUES ("' + req.body.log + '", "' + req.body.ref + '","' + req.body.dia + '","' + req.body.titulo + '")', function (erro, resultado, campos) {
+    res.json(resultado);
+  });
+});
+
+app.get('/log-error/get', function (req, res) { 
+  conn.query('SELECT * FROM log_error WHERE DATE(reg) = CURDATE()', function (erro, resultado, campos) {
     res.json(resultado);
   });
 });
