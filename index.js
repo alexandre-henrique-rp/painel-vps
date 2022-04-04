@@ -172,6 +172,14 @@ app.get('/log-error/get', function (req, res) {
 });
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+// pesqisa cf vencido por periodo
+
+app.get('/relatorio/cfvencido', function (req, res) {
+  conn.query('SELECT id, vctoCD, s_alerta, tipoCD, telefone, email, IF(tipocd LIKE "%J%", razaosocial, nome) AS titulo, CASE WHEN tipocd LIKE "%J%" THEN cnpj WHEN tipocd LIKE "%F%" THEN cpf END as titulo_doc FROM fcweb WHERE `vctoCD` BETWEEN "' + req.body.data1 + '" AND "' + req.body.data2 + '" AND `vctoCD` <> "0000-00-00"', function (erro, resultado, campos) {
+    res.json(resultado);
+  });
+});
+// ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
 // Delete
